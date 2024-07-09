@@ -7,8 +7,8 @@ import (
 )
 
 const (
-	screen_height int     = 50
-	screen_width  int     = 50
+	screen_height int     = 22
+	screen_width  int     = 80
 	R1            float64 = 1.0
 	R2            float64 = 2.0
 	K2            float64 = 5.0
@@ -30,9 +30,6 @@ func renderFrame(A, B float64) {
 	thetaSpacing := 0.07
 	phiSpacing := 0.02
 
-	// R1 := 1.0
-	// R2 := 2.0
-	// K2 := 5.0
 	// Calculate K1 based on screen size: the maximum x-distance occurs
 	// roughly at the edge of the torus, which is at x=R1+R2, z=0.  we
 	// want that to be displaced 3/8ths of the width of the screen, which
@@ -65,19 +62,30 @@ func renderFrame(A, B float64) {
 			ooz := 1 / z // one over z
 
 			xp = int(float64(screen_width/2) + K1*ooz*x)
-			yp = int(float64(screen_width/2) - K1*ooz*y)
+			yp = int(float64(screen_height/2) - K1*ooz*y)
+
+			if xp < 0 || xp >= screen_width || yp < 0 || yp >= screen_height {
+				continue
+			}
 
 			// Calculated from L = (Nx, Ny, Nz) dot (0, 1, -1) <- pre-chosen light vector
 			luminance := cosPhi*cosTheta*sinB - cosA*cosTheta*sinPhi - sinA*sinTheta + cosB*(cosA*sinTheta-cosTheta*sinA*sinPhi)
-
-			if luminance > 0 {
-				// larger 1/z means pixel is closer so it should override for current x', y'
-				if ooz > zBuffer[xp][yp] {
-					luminance_index := int(luminance * 8)
-					zBuffer[xp][yp] = ooz
-					output[xp][yp] = string(".,-~:;=!*#$@"[luminance_index])
-				}
+			if luminance <= 0 {
+				continue
 			}
+
+			// larger 1/z means pixel is closer so it should override for current x', y'
+			if ooz <= zBuffer[yp][xp] {
+				continue
+			}
+
+			luminance_index := int(luminance * 8)
+			if luminance_index < 0 {
+				continue
+			}
+
+			zBuffer[yp][xp] = ooz
+			output[yp][xp] = string(".,-~:;=!*#$@"[luminance_index])
 
 		}
 	}
@@ -102,6 +110,7 @@ func main() {
 		B += 0.02
 
 		renderFrame(A, B)
+		// fmt.Print("\x1b[2J")
 		fmt.Print("\033[H\033[2J")
 		for i := range screen_height {
 			for j := range screen_width {
