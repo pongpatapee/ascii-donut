@@ -27,16 +27,15 @@ func renderFrame(A, B float64) {
 		}
 	}
 
-	thetaSpacing := 0.07
-	phiSpacing := 0.02
-
 	// Calculate K1 based on screen size: the maximum x-distance occurs
 	// roughly at the edge of the torus, which is at x=R1+R2, z=0.  we
 	// want that to be displaced 3/8ths of the width of the screen, which
 	// is 3/4th of the way from the center to the side of the screen.
 	// screen_width*3/8 = K1*(R1+R2)/(K2+0)
 	// screen_width*K2*3/(8*(R1+R2)) = K1
-	K1 := float64(screen_width) * K2 * 3 / (8 * (R1 + R2))
+	// K1 := float64(screen_width) * K2 * 3 / (8 * (R1 + R2))
+	// K1 := float64(screen_width) * K2 * 3 / (15 * (R1 + R2))
+	K1 := 30.0
 
 	cosA := math.Cos(A)
 	cosB := math.Cos(B)
@@ -50,6 +49,8 @@ func renderFrame(A, B float64) {
 	var xp int // x prime
 	var yp int // y prime
 
+	thetaSpacing := 0.07
+	phiSpacing := 0.02
 	for theta := 0.0; theta < 2*math.Pi; theta += thetaSpacing {
 		cosTheta, sinTheta := math.Cos(theta), math.Sin(theta)
 		for phi := 0.0; phi < 2*math.Pi; phi += phiSpacing {
@@ -61,8 +62,9 @@ func renderFrame(A, B float64) {
 
 			ooz := 1 / z // one over z
 
+			yScale := 0.5
 			xp = int(float64(screen_width/2) + K1*ooz*x)
-			yp = int(float64(screen_height/2) - K1*ooz*y)
+			yp = int(float64(screen_height/2) - K1*ooz*y*yScale)
 
 			if xp < 0 || xp >= screen_width || yp < 0 || yp >= screen_height {
 				continue
